@@ -86,18 +86,28 @@ func (g *Game) Update() error {
 		}
 	}
 
-	if g.ballX >= g.player2X { // Rebote en el borde derecho
+	// Verificación de colisiones con las palas
+	// Rebote en la pala izquierda (Jugador 1)
+	if g.ballX <= g.player1X+paddleWidth && // Colisión en el borde de la pala
+		g.ballY+ballSize >= g.player1Y && // Dentro del rango Y de la pala
+		g.ballY <= g.player1Y+paddleHeight {
+
+		if ballDirection == 1 {
+			ballDirection = 0
+		} else if ballDirection == 3 {
+			ballDirection = 2
+		}
+	}
+
+	// Rebote en la pala derecha (Jugador 2)
+	if g.ballX+ballSize >= g.player2X && // Colisión en el borde de la pala
+		g.ballY+ballSize >= g.player2Y && // Dentro del rango Y de la pala
+		g.ballY <= g.player2Y+paddleHeight {
+
 		if ballDirection == 0 {
 			ballDirection = 1
 		} else if ballDirection == 2 {
 			ballDirection = 3
-		}
-	}
-	if g.ballX <= g.player1X { // Rebote en el borde izquierdo
-		if ballDirection == 3 {
-			ballDirection = 2
-		} else if ballDirection == 1 {
-			ballDirection = 0
 		}
 	}
 
