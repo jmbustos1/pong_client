@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  pong_client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pong_client
+    container_name: pong_client_container
+    volumes:
+      - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix  # Monta el socket de X11 para la comunicación gráfica
+    environment:
+      - DISPLAY=${DISPLAY}  # Configura la variable DISPLAY para que use la pantalla del host
+    stdin_open: true
+    tty: true
