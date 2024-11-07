@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -71,14 +70,13 @@ func (g *Game) checkPaddleCollision(paddleX, paddleY float64, isLeftPaddle bool)
 			// Calcular la posición de colisión en la pala (de 0.0 a 1.0)
 			collisionPoint := (g.ballY - paddleY) / paddleHeight
 
-			// Calcular un ángulo de rebote basado en la posición de impacto
-			angle := math.Pi * (0.25 + 0.5*collisionPoint) // Ángulo entre 45° y 135°
-			if isLeftPaddle {
-				g.ballDirection.X = math.Cos(angle)
-			} else {
-				g.ballDirection.X = -math.Cos(angle)
+			// Si impacta en el 10% superior o inferior, invierte la dirección en 180 grados
+			if collisionPoint <= 0.1 || collisionPoint >= 0.9 {
+				g.ballDirection.X *= -1
+				g.ballDirection.Y *= -1
+			} else { // De lo contrario, cambia solo la dirección X
+				g.ballDirection.X *= -1
 			}
-			g.ballDirection.Y = math.Sin(angle)
 		}
 	}
 }
