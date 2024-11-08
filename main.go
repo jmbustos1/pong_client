@@ -26,6 +26,7 @@ type Game struct {
 	player1X, player2X float64
 	ballX, ballY       float64
 	ballDirection      Vector
+	lastHitPaddle      bool
 }
 
 func (g *Game) Update() error {
@@ -67,17 +68,40 @@ func (g *Game) checkPaddleCollision(paddleX, paddleY float64, isLeftPaddle bool)
 	if (isLeftPaddle && g.ballX <= paddleX+paddleWidth) || (!isLeftPaddle && g.ballX+ballSize >= paddleX) {
 		// Verificar si la bola está dentro de la altura de la pala
 		if g.ballY+ballSize >= paddleY && g.ballY <= paddleY+paddleHeight {
+			// Evitar rebotes consecutivos en el mismo frame
+			if g.lastHitPaddle {
+				return
+			}
+			g.lastHitPaddle = true // Marcar que la pala fue golpeada en este frame
+
 			// Calcular la posición de colisión en la pala (de 0.0 a 1.0)
 			collisionPoint := (g.ballY - paddleY) / paddleHeight
 
-			// Si impacta en el 10% superior o inferior, invierte la dirección en 180 grados
-			if collisionPoint <= 0.1 || collisionPoint >= 0.9 {
+			// Si la bola viene hacia abajo y choca con la parte superior de la pala (10% superior)
+			if collisionPoint <= 0.1 && g.ballDirection.Y > 0 {
+				// Rebote de 180 grados: invertir X y Y
 				g.ballDirection.X *= -1
 				g.ballDirection.Y *= -1
-			} else { // De lo contrario, cambia solo la dirección X
+			} else if collisionPoint >= 0.9 && g.ballDirection.Y < 0 { // Si viene hacia arriba y choca con la parte inferior (10% inferior)
+				// Rebote de 180 grados: invertir X y Y
+				g.ballDirection.X *= -1
+				g.ballDirection.Y *= -1
+			} else {
+				// Rebote normal: solo invertimos X
 				g.ballDirection.X *= -1
 			}
+
+			// Separar la bola de la pala para evitar rebotes infinitos
+			if isLeftPaddle {
+				g.ballX = paddleX + paddleWidth // Posicionar justo a la derecha de la pala
+			} else {
+				g.ballX = paddleX - ballSize // Posicionar justo a la izquierda de la pala
+			}
+		} else {
+			g.lastHitPaddle = false // Resetear el estado si no hay colisión en este frame
 		}
+	} else {
+		g.lastHitPaddle = false // Resetear el estado si no hay colisión en este frame
 	}
 }
 
