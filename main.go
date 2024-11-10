@@ -1,13 +1,17 @@
 package main
 
 import (
+	// "fmt"
 	"image/color"
+	"io"
 	"log"
 	"os"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 const (
@@ -18,7 +22,8 @@ const (
 	ballSize      = 10
 	paddleSpeed   = 5
 	ballSpeed     = 4
-	inputCooldown = 200 * time.Millisecond // Cooldown de 200 ms para el menú
+	inputCooldown = 200 * time.Millisecond
+	fontSize      = 24 // Tamaño de la fuente para el menú
 )
 
 type GameState int
@@ -43,6 +48,47 @@ type Game struct {
 	ballX, ballY       float64
 	ballDirection      Vector
 	lastHitPaddle      bool
+	font               font.Face
+}
+
+func NewGame() *Game {
+	// Cargar la fuente desde el archivo TTF
+	fontFile, err := os.Open("assets/Roboto-Regular.ttf")
+	if err != nil {
+		log.Fatal("Error abriendo el archivo de fuente:", err)
+	}
+	defer fontFile.Close()
+
+	// Lee el archivo completo
+	fontBytes, err := io.ReadAll(fontFile)
+	if err != nil {
+		log.Fatal("Error leyendo los bytes del archivo de fuente:", err)
+	}
+
+	// Verifica el tamaño del archivo
+	// fmt.Println("Tamaño de la fuente en bytes:", len(fontBytes))
+	// Parsear la fuente y crear un `font.Face` para el tamaño deseado
+	ttf, err := opentype.Parse(fontBytes)
+	// fmt.Println(ttf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fontFace, err := opentype.NewFace(ttf, &opentype.FaceOptions{
+		Size:    fontSize,
+		DPI:     72,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &Game{
+		state:         Menu,
+		menuSelection: 0,
+		lastInputTime: time.Now(),
+		font:          fontFace,
+	}
 }
 
 func (g *Game) Update() error {
@@ -52,18 +98,15 @@ func (g *Game) Update() error {
 	case Playing:
 		g.updateGame()
 	case Lobby:
-		// Placeholder para el lobby
 	}
 	return nil
 }
 
 func (g *Game) updateMenu() {
-	// Revisar el tiempo desde la última entrada para aplicar debounce
 	if time.Since(g.lastInputTime) < inputCooldown {
 		return
 	}
 
-	// Navegación del menú con debounce aplicado
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		g.menuSelection = (g.menuSelection + 2) % 3
 		g.lastInputTime = time.Now()
@@ -73,22 +116,20 @@ func (g *Game) updateMenu() {
 		g.lastInputTime = time.Now()
 	}
 
-	// Selección del menú
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		switch g.menuSelection {
-		case 0: // New Game
+		case 0:
 			g.startNewGame()
-		case 1: // Lobby (placeholder)
+		case 1:
 			g.state = Lobby
-		case 2: // Quit
+		case 2:
 			log.Println("Exiting game.")
-			os.Exit(0) // Salir del programa
+			os.Exit(0)
 		}
 	}
 }
 
 func (g *Game) startNewGame() {
-	// Inicializar el juego
 	g.state = Playing
 	g.player1Y = screenHeight/2 - paddleHeight/2
 	g.player2Y = screenHeight/2 - paddleHeight/2
@@ -96,7 +137,7 @@ func (g *Game) startNewGame() {
 	g.player2X = screenWidth - 30
 	g.ballX = screenWidth / 2
 	g.ballY = screenHeight / 2
-	g.ballDirection = Vector{X: 1, Y: 1} // Dirección inicial
+	g.ballDirection = Vector{X: 1, Y: 1}
 }
 
 func (g *Game) updateGame() {
@@ -116,28 +157,24 @@ func (g *Game) updateGame() {
 		g.player2Y += paddleSpeed
 	}
 
-	// Movimiento de la bola
 	g.ballX += g.ballDirection.X * ballSpeed
 	g.ballY += g.ballDirection.Y * ballSpeed
 
-	// Verificación de colisiones con los bordes superior e inferior
 	if g.ballY <= 0 || g.ballY >= screenHeight-ballSize {
-		g.ballDirection.Y *= -1 // Invertir dirección vertical
+		g.ballDirection.Y *= -1
 	}
 
-	// Verificación de colisiones con las palas
-	g.checkPaddleCollision(g.player1X, g.player1Y, true)  // Pala izquierda
-	g.checkPaddleCollision(g.player2X, g.player2Y, false) // Pala derecha
+	g.checkPaddleCollision(g.player1X, g.player1Y, true)
+	g.checkPaddleCollision(g.player2X, g.player2Y, false)
 }
 
-// checkPaddleCollision calcula el rebote dependiendo de la posición de colisión en la pala
 func (g *Game) checkPaddleCollision(paddleX, paddleY float64, isLeftPaddle bool) {
 	if (isLeftPaddle && g.ballX <= paddleX+paddleWidth) || (!isLeftPaddle && g.ballX+ballSize >= paddleX) {
 		if g.ballY+ballSize >= paddleY && g.ballY <= paddleY+paddleHeight {
 			if g.lastHitPaddle {
 				return
 			}
-			g.lastHitPaddle = true // Marcar que la pala fue golpeada en este frame
+			g.lastHitPaddle = true
 
 			collisionPoint := (g.ballY - paddleY) / paddleHeight
 
@@ -171,7 +208,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case Playing:
 		g.drawGame(screen)
 	case Lobby:
-		screen.Fill(color.RGBA{R: 30, G: 30, B: 30, A: 255}) // Fondo del lobby
+		screen.Fill(color.RGBA{R: 30, G: 30, B: 30, A: 255})
 	}
 }
 
@@ -179,11 +216,11 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255})
 	menuItems := []string{"New Game", "Lobby", "Quit"}
 	for i, item := range menuItems {
-		yPos := screenHeight/2 + (i * 20) - 20
+		yPos := screenHeight/2 + (i * fontSize) - 20
 		if i == g.menuSelection {
-			ebitenutil.DebugPrintAt(screen, "> "+item, screenWidth/2-30, yPos) // Agrega ">" para mostrar selección
+			text.Draw(screen, "> "+item, g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
 		} else {
-			ebitenutil.DebugPrintAt(screen, item, screenWidth/2-30, yPos)
+			text.Draw(screen, item, g.font, screenWidth/2-30, yPos, color.White)
 		}
 	}
 }
@@ -214,13 +251,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	game := &Game{
-		state:         Menu, // Iniciar en el menú
-		menuSelection: 0,    // Iniciar en "New Game"
-		lastInputTime: time.Now(),
-	}
+	game := NewGame()
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Pong Game Menu")
+	ebiten.SetWindowTitle("Pong Game with Custom Font")
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
