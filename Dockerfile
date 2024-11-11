@@ -34,5 +34,5 @@ EXPOSE 8080
 # CMD ["/docker-app"]
 
 # ejecutar codigo fuente
-CMD ["go", "run", "main.go"] 
+CMD ["go", "run", "."] 
 
