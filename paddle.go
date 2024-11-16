@@ -1,5 +1,6 @@
 package main
 
+// xhost +local:docker
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 )

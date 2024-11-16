@@ -8,6 +8,14 @@ RUN apt-get update && apt-get install -y \
     xorg-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libegl1-mesa \
+    libxrandr2 \
+    libxinerama1 \
+    libxcursor1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set destination for COPY
 WORKDIR /app
 

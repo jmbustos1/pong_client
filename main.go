@@ -11,6 +11,10 @@ func main() {
 	game := NewGame()
 
 	// Configuración de la ventana
+	// Hacer que la ventana sea resizable y a pantalla completa
+	// ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	// ebiten.SetFullscreen(false) // Cambia a true si quieres comenzar en pantalla completa
+
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Pong Game with Custom Font")
 
