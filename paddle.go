@@ -12,13 +12,16 @@ const (
 )
 
 // Actualiza la posición de las palas con las teclas W/S y las flechas ↑/↓.
-func (g *Game) updatePaddles() {
+func (g *Game) updatePaddles(client *Client, playerID int) {
+	updated := false
 	// Controles del Jugador 1 (W y S)
 	if ebiten.IsKeyPressed(ebiten.KeyW) && g.player1Y > 0 {
 		g.player1Y -= paddleSpeed
+		updated = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) && g.player1Y < screenHeight-paddleHeight {
 		g.player1Y += paddleSpeed
+		updated = true
 	}
 
 	// Controles del Jugador 2 (Flechas ↑ y ↓)
@@ -27,6 +30,16 @@ func (g *Game) updatePaddles() {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) && g.player2Y < screenHeight-paddleHeight {
 		g.player2Y += paddleSpeed
+	}
+	// Si hubo movimiento, envía un mensaje al servidor
+	if updated {
+		client.SendMessage(map[string]interface{}{
+			"event":     "move_paddle",
+			"player_id": playerID,
+			// Incluye las posiciones de ambas palas para sincronización
+			"paddle1_y": g.player1Y,
+			"paddle2_y": g.player2Y,
+		})
 	}
 }
 

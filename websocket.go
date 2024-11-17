@@ -16,11 +16,13 @@ func NewClient(url string) *Client {
 	if err != nil {
 		log.Fatalf("Error al conectarse al servidor WebSocket: %v", err)
 	}
+	log.Println("Conexión establecida con el servidor WebSocket:", url)
 	return &Client{conn: conn}
 }
 
 // SendMessage envía un mensaje al servidor
 func (c *Client) SendMessage(msg interface{}) {
+	log.Printf("Enviando mensaje al servidor: %+v\n", msg)
 	err := c.conn.WriteJSON(msg)
 	if err != nil {
 		log.Printf("Error al enviar mensaje: %v", err)
@@ -36,6 +38,7 @@ func (c *Client) Listen(handleMessage func(msg map[string]interface{})) {
 			log.Printf("Error al recibir mensaje: %v", err)
 			break
 		}
+		log.Printf("Mensaje recibido del servidor: %+v\n", msg)
 		handleMessage(msg)
 	}
 }

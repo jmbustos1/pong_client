@@ -31,6 +31,8 @@ type Game struct {
 	lastInputTime time.Time
 	font          font.Face
 	player1Y      float64
+	playerID      float64
+	client        *Client
 	player2Y      float64
 	player1X      float64
 	player2X      float64
@@ -50,6 +52,7 @@ func NewGame() *Game {
 		font:          fontFace,
 		player1X:      20,
 		player2X:      screenWidth - 30,
+		client:        NewClient("ws://172.17.0.1:8088/ws"),
 		ballX:         screenWidth / 2,
 		ballY:         screenHeight / 2,
 		ballDirection: Vector{X: 1, Y: 1},
@@ -58,7 +61,7 @@ func NewGame() *Game {
 
 func (g *Game) updateGame() {
 	// Actualiza la posición de las palas
-	g.updatePaddles()
+	g.updatePaddles(g.client, int(g.playerID))
 
 	// Actualiza la posición de la pelota y maneja colisiones
 	g.updateBall()
