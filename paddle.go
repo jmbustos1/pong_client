@@ -12,7 +12,7 @@ const (
 )
 
 // Actualiza la posición de las palas con las teclas W/S y las flechas ↑/↓.
-func (g *Game) updatePaddles(client *Client, playerID int) {
+func (g *Game) updatePaddles(client *Client, playerID string) {
 	updated := false
 	// Controles del Jugador 1 (W y S)
 	if ebiten.IsKeyPressed(ebiten.KeyW) && g.player1Y > 0 {

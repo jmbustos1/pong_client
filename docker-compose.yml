@@ -6,7 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     image: pong_client
-    container_name: pong_client_container
+    container_name: pong_client_container_${PLAYER_ID}
+    profiles:
+      - player1
+      - player2
     volumes:
       - .:/app
       - /tmp/.X11-unix:/tmp/.X11-unix  # Monta el socket de X11 para la comunicación gráfica

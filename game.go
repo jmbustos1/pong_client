@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/sha1"
+	"fmt"
 	"image/color"
+	"os"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -31,7 +34,7 @@ type Game struct {
 	lastInputTime time.Time
 	font          font.Face
 	player1Y      float64
-	playerID      float64
+	playerID      string
 	client        *Client
 	player2Y      float64
 	player1X      float64
@@ -42,9 +45,23 @@ type Game struct {
 	lastHitPaddle bool
 }
 
+func generatePlayerID() string {
+	// Usa el hostname como base para generar el ID
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknown"
+	}
+
+	// Hashea el hostname para obtener un ID único
+	hash := sha1.Sum([]byte(hostname))
+	return fmt.Sprintf("%x", hash[:4]) // Usa los primeros 4 bytes como ID
+}
+
 // NewGame inicializa el juego y carga los recursos necesarios.
 func NewGame() *Game {
 	fontFace := loadFont() // Asume que tienes una función `loadFont()` en `assets.go`
+	pID := generatePlayerID()
+	fmt.Printf("Generated Player ID: %s\n", pID)
 	return &Game{
 		state:         Menu,
 		menuSelection: 0,
@@ -52,6 +69,7 @@ func NewGame() *Game {
 		font:          fontFace,
 		player1X:      20,
 		player2X:      screenWidth - 30,
+		playerID:      pID,
 		client:        NewClient("ws://172.17.0.1:8088/ws"),
 		ballX:         screenWidth / 2,
 		ballY:         screenHeight / 2,
@@ -61,7 +79,7 @@ func NewGame() *Game {
 
 func (g *Game) updateGame() {
 	// Actualiza la posición de las palas
-	g.updatePaddles(g.client, int(g.playerID))
+	g.updatePaddles(g.client, g.playerID)
 
 	// Actualiza la posición de la pelota y maneja colisiones
 	g.updateBall()
