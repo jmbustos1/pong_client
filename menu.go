@@ -42,10 +42,12 @@ func (g *Game) updateMenu() {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		switch g.menuSelection {
 		case 0:
-			g.startNewGame()
+			g.createLobby("My Awesome Lobby")
 		case 1:
-			g.state = Lobby
+			g.startNewGame()
 		case 2:
+			g.state = Lobby
+		case 3:
 			log.Println("Exiting game.")
 			os.Exit(0)
 		}

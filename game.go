@@ -23,7 +23,8 @@ type Vector struct {
 type GameState int
 
 const (
-	Menu GameState = iota
+	Menu      GameState = iota
+	LobbyMenu           // Menú para ver o crear lobbies
 	Playing
 	Lobby
 )
