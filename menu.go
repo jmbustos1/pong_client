@@ -64,6 +64,52 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	}
 }
 
+func (g *Game) drawLobbyMenu(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{R: 30, G: 30, B: 30, A: 255}) // Fondo gris oscuro
+
+	// Lista de lobbies simulados (reemplazar con datos reales del servidor)
+	lobbies := []string{"Lobby 1", "Lobby 2", "Lobby 3"}
+
+	text.Draw(screen, "Available Lobbies:", g.font, screenWidth/2-100, 50, color.White)
+
+	// Dibujar la lista de lobbies
+	for i, lobby := range lobbies {
+		yPos := 100 + (i * fontSize) // Espaciado vertical
+		if i == g.menuSelection {
+			text.Draw(screen, "> "+lobby, g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
+		} else {
+			text.Draw(screen, lobby, g.font, screenWidth/2-30, yPos, color.White)
+		}
+	}
+
+	// Opciones adicionales: "Create Lobby" y "Back"
+	yPos := screenHeight - 80
+	text.Draw(screen, "Create Lobby", g.font, screenWidth/2-60, yPos, color.RGBA{R: 100, G: 255, B: 100, A: 255})
+	yPos += fontSize + 10
+	text.Draw(screen, "Back", g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
+}
+
+func (g *Game) drawLobby(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255}) // Fondo gris más claro
+
+	// Jugadores conectados (simulados aquí)
+	players := []string{"Player 1", "Player 2"} // Cambiar por datos reales del servidor
+
+	text.Draw(screen, "Lobby Players:", g.font, screenWidth/2-100, 50, color.White)
+
+	// Dibujar la lista de jugadores
+	for i, player := range players {
+		yPos := 100 + (i * fontSize) // Espaciado vertical
+		text.Draw(screen, player, g.font, screenWidth/2-30, yPos, color.White)
+	}
+
+	// Opciones: "Start Game" y "Back"
+	yPos := screenHeight - 80
+	text.Draw(screen, "Start Game", g.font, screenWidth/2-60, yPos, color.RGBA{R: 100, G: 255, B: 100, A: 255})
+	yPos += fontSize + 10
+	text.Draw(screen, "Back", g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
+}
+
 func (g *Game) updateLobbyMenu() {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		switch g.menuSelection {

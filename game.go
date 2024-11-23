@@ -109,8 +109,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawMenu(screen)
 	case Playing:
 		g.drawGame(screen)
+	case LobbyMenu:
+		g.drawLobbyMenu(screen)
 	case Lobby:
-		screen.Fill(color.RGBA{R: 30, G: 30, B: 30, A: 255}) // Fondo del lobby
+		g.drawLobby(screen)
 	}
 }
 
