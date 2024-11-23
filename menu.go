@@ -42,12 +42,10 @@ func (g *Game) updateMenu() {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		switch g.menuSelection {
 		case 0:
-			g.createLobby("My Awesome Lobby")
-		case 1:
 			g.startNewGame()
+		case 1:
+			g.state = LobbyMenu
 		case 2:
-			g.state = Lobby
-		case 3:
 			log.Println("Exiting game.")
 			os.Exit(0)
 		}
@@ -64,4 +62,27 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 			text.Draw(screen, item, g.font, screenWidth/2-30, yPos, color.White)
 		}
 	}
+}
+
+func (g *Game) updateLobbyMenu() {
+	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
+		switch g.menuSelection {
+		case 0: // Crear un lobby
+			g.createLobby("My Awesome Lobby")
+			g.state = Lobby // Cambia al estado Lobby para esperar al jugador 2
+		case 1: // Unirse a un lobby existente
+			g.joinLobby("selected_lobby_id") // Usa el ID del lobby seleccionado
+			g.state = Lobby
+		case 2: // Volver al menú principal
+			g.state = Menu
+		}
+	}
+}
+
+func (g *Game) joinLobby(lobbyID string) {
+	g.client.SendMessage(map[string]interface{}{
+		"event":     "join_lobby",
+		"player_id": g.playerID,
+		"lobby_id":  lobbyID,
+	})
 }

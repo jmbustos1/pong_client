@@ -86,15 +86,16 @@ func (g *Game) updateGame() {
 	g.updateBall()
 }
 
-// Update ejecuta la lógica del juego basada en el estado actual.
 func (g *Game) Update() error {
 	switch g.state {
 	case Menu:
 		g.updateMenu()
+	case LobbyMenu:
+		g.updateLobbyMenu()
+	// case Lobby:                  ///REVISAR
+	// 	g.updateLobby()
 	case Playing:
 		g.updateGame()
-	case Lobby:
-		// Lógica del lobby (placeholder)
 	}
 	return nil
 }
