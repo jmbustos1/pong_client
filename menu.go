@@ -107,22 +107,29 @@ func (g *Game) drawLobbyMenu(screen *ebiten.Image) {
 func (g *Game) drawLobby(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255}) // Fondo gris más claro
 
-	// Jugadores conectados (simulados aquí)
-	players := []string{"Player 1", "Player 2"} // Cambiar por datos reales del servidor
-
+	// Mostrar el título
 	text.Draw(screen, "Lobby Players:", g.font, screenWidth/2-100, 50, color.White)
 
-	// Dibujar la lista de jugadores
-	for i, player := range players {
+	// Dibujar la lista de jugadores reales
+	for i, player := range g.lobbyPlayers {
 		yPos := 100 + (i * fontSize) // Espaciado vertical
 		text.Draw(screen, player, g.font, screenWidth/2-30, yPos, color.White)
 	}
 
 	// Opciones: "Start Game" y "Back"
 	yPos := screenHeight - 80
-	text.Draw(screen, "Start Game", g.font, screenWidth/2-60, yPos, color.RGBA{R: 100, G: 255, B: 100, A: 255})
+	if g.lobbyMenuSelection == 0 {
+		text.Draw(screen, "> Start Game", g.font, screenWidth/2-60, yPos, color.RGBA{R: 100, G: 255, B: 100, A: 255})
+	} else {
+		text.Draw(screen, "Start Game", g.font, screenWidth/2-30, yPos, color.White)
+	}
 	yPos += fontSize + 10
-	text.Draw(screen, "Back", g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
+
+	if g.lobbyMenuSelection == 1 {
+		text.Draw(screen, "> Back", g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
+	} else {
+		text.Draw(screen, "Back", g.font, screenWidth/2-30, yPos, color.White)
+	}
 }
 
 func (g *Game) updateLobbyMenu() {
@@ -158,6 +165,39 @@ func (g *Game) updateLobbyMenu() {
 			g.joinLobby(selectedLobby.ID)
 			g.state = LobbyIn
 			g.stateChangeTime = time.Now()
+		}
+	}
+}
+
+func (g *Game) updateLobby() {
+	// Evitar procesar entradas si el cooldown no ha terminado
+	if time.Since(g.lastInputTime) < inputCooldown || time.Since(g.stateChangeTime) < stateCooldown {
+		return
+	}
+
+	// Navegación entre las opciones "Start Game" y "Back"
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		g.lobbyMenuSelection = (g.lobbyMenuSelection + 1) % 2 // Solo hay 2 opciones
+		g.lastInputTime = time.Now()
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		g.lobbyMenuSelection = (g.lobbyMenuSelection + 1) % 2
+		g.lastInputTime = time.Now()
+	}
+
+	// Selección de opciones
+	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
+		switch g.lobbyMenuSelection {
+		case 0: // Start Game
+			g.client.SendMessage(Message{
+				Event:    "start_game",
+				PlayerID: g.playerID,
+				LobbyID:  g.client.LobbyID,
+			})
+			log.Println("Intentando iniciar el juego...")
+		case 1: // Back
+			g.state = LobbyMenu
+			g.lastInputTime = time.Now() // Prevenir rebotes al volver al LobbyMenu
 		}
 	}
 }
