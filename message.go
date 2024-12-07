@@ -10,7 +10,12 @@ type Message struct {
 	Data     string   `json:"data,omitempty"`
 }
 
-func (g *Game) handleServerMessage(msg Message) {
+func (g *Game) HandleServerMessage(msg Message) {
+	log.Printf("Evento recibido: %s, Detalles: %+v\n", msg.Event, msg)
+	if msg.Event == "test_message" {
+		log.Println("Mensaje de prueba recibido:", msg.Data)
+	}
+	log.Println("MENSAJEEEEEE", msg.Event)
 	switch msg.Event {
 	case "lobby_players":
 		log.Printf("Jugadores en el lobby: %+v\n", msg.Lobbies)
