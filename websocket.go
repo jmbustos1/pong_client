@@ -7,7 +7,9 @@ import (
 )
 
 type Client struct {
-	conn *websocket.Conn
+	conn     *websocket.Conn
+	PlayerID string
+	LobbyID  string // Asegúrate de incluir este campo
 }
 
 // NewClient crea una nueva conexión WebSocket al servidor
@@ -30,15 +32,15 @@ func (c *Client) SendMessage(msg interface{}) {
 }
 
 // Listen escucha mensajes del servidor
-func (c *Client) Listen(handleMessage func(msg map[string]interface{})) {
+func (c *Client) Listen(handleMessage func(msg Message)) {
 	for {
-		var msg map[string]interface{}
-		err := c.conn.ReadJSON(&msg)
+		var msg Message
+		err := c.conn.ReadJSON(&msg) // Leer mensaje en formato JSON
 		if err != nil {
-			log.Printf("Error al recibir mensaje: %v", err)
+			log.Printf("Error al recibir mensaje del servidor: %v\n", err)
+			c.conn.Close() // Cerrar la conexión si ocurre un error
 			break
 		}
-		log.Printf("Mensaje recibido del servidor: %+v\n", msg)
-		handleMessage(msg)
+		handleMessage(msg) // Procesar el mensaje recibido
 	}
 }
