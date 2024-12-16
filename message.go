@@ -3,11 +3,11 @@ package main
 import "log"
 
 type Message struct {
-	Event    string   `json:"event"`
-	PlayerID string   `json:"player_id,omitempty"`
-	LobbyID  string   `json:"lobby_id,omitempty"`
-	Lobbies  []string `json:"lobbies,omitempty"`
-	Data     string   `json:"data,omitempty"`
+	Event    string      `json:"event"`
+	PlayerID string      `json:"player_id,omitempty"`
+	LobbyID  string      `json:"lobby_id,omitempty"`
+	Lobbies  interface{} `json:"lobbies,omitempty"` // Cambia esto a interface{}
+	Data     string      `json:"data,omitempty"`
 }
 
 func (g *Game) HandleServerMessage(msg Message) {
@@ -18,20 +18,40 @@ func (g *Game) HandleServerMessage(msg Message) {
 	log.Println("MENSAJEEEEEE", msg.Event)
 	switch msg.Event {
 	case "lobby_players":
-		log.Printf("Jugadores en el lobby: %+v\n", msg.Lobbies)
-		g.lobbyPlayers = msg.Lobbies // Actualiza la lista de jugadores en el lobby actual
+		// Actualizar la lista de jugadores en el lobby
+		log.Printf("Jugadores en el lobby actualizados: %+v\n", msg.Lobbies)
+		if players, ok := msg.Lobbies.([]interface{}); ok {
+			var updatedPlayers []string
+			for _, player := range players {
+				if playerName, ok := player.(string); ok {
+					updatedPlayers = append(updatedPlayers, playerName)
+				}
+			}
+			g.lobbyPlayers = updatedPlayers
+		}
+		log.Printf("Jugadores actualizados: %+v\n", g.lobbyPlayers)
 
 	case "lobbies_list":
 		log.Printf("Lista de lobbies recibida: %+v\n", msg.Lobbies)
-		// Convertir []string en []Lobby
+
+		// Convertir la lista de lobbies en []Lobby
 		var lobbies []Lobby
-		for _, lobbyName := range msg.Lobbies {
-			lobbies = append(lobbies, Lobby{
-				ID:   "",        // Si no se recibe un ID, déjalo vacío
-				Name: lobbyName, // Usa el nombre del lobby
-			})
+		if list, ok := msg.Lobbies.([]interface{}); ok {
+			for _, lobbyData := range list {
+				if lobbyMap, ok := lobbyData.(map[string]interface{}); ok {
+					// Extraer los campos ID y Name del mapa
+					id, _ := lobbyMap["id"].(string)
+					name, _ := lobbyMap["name"].(string)
+
+					lobbies = append(lobbies, Lobby{
+						ID:   id,
+						Name: name,
+					})
+				}
+			}
 		}
-		g.lobbies = lobbies // Asignar la lista convertida
+		g.lobbies = lobbies // Actualiza la lista de lobbies
+
 	case "lobby_joined":
 		log.Printf("Unido al lobby: %s\n", msg.LobbyID)
 		g.state = LobbyIn
