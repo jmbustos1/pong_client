@@ -1,5 +1,10 @@
 package main
 
+type Lobby struct {
+	ID   string
+	Name string
+}
+
 func (g *Game) createLobby(lobbyName string) {
 	g.client.SendMessage(map[string]interface{}{
 		"event":      "create_lobby",
