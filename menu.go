@@ -38,7 +38,7 @@ func (g *Game) updateMenu() {
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		g.menuSelection = (g.menuSelection + 1) % 3
 		g.lastInputTime = time.Now()
-	}
+	} ////SEPARAR MENSAJE DE ENVIO
 
 	// Solo permite el cambio de estado si ha pasado el cooldown
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) && time.Since(g.stateChangeTime) > stateCooldown {
@@ -75,32 +75,33 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 func (g *Game) drawLobbyMenu(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{R: 30, G: 30, B: 30, A: 255}) // Fondo gris oscuro
 
+	// Título
 	text.Draw(screen, "Available Lobbies:", g.font, screenWidth/2-100, 50, color.White)
+
+	// Dibujar "Create Lobby" como la primera opción
+	yPos := 100                    // Posición inicial
+	if g.lobbyMenuSelection == 0 { // Selección en "Create Lobby"
+		text.Draw(screen, "> Create Lobby", g.font, screenWidth/2-60, yPos, color.RGBA{R: 100, G: 255, B: 100, A: 255})
+	} else {
+		text.Draw(screen, "Create Lobby", g.font, screenWidth/2-30, yPos, color.White)
+	}
 
 	// Dibujar la lista de lobbies dinámica
 	for i, lobby := range g.lobbies {
-		yPos := 100 + (i * fontSize)   // Espaciado vertical
-		if g.lobbyMenuSelection == i { // Compara con el índice actual
+		yPos += fontSize + 10            // Desplazamiento vertical
+		if g.lobbyMenuSelection == i+1 { // Ajustar índice dinámico
 			text.Draw(screen, "> "+lobby.Name, g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
 		} else {
 			text.Draw(screen, lobby.Name, g.font, screenWidth/2-30, yPos, color.White)
 		}
 	}
 
-	// Dibujar las opciones adicionales
-	createLobbyYPos := 100 + (len(g.lobbies) * fontSize) // "Create Lobby" justo después de los lobbies
-	backYPos := createLobbyYPos + fontSize + 10          // "Back" después de "Create Lobby"
-
-	if g.lobbyMenuSelection == len(g.lobbies) { // Selección en "Create Lobby"
-		text.Draw(screen, "> Create Lobby", g.font, screenWidth/2-60, createLobbyYPos, color.RGBA{R: 100, G: 255, B: 100, A: 255})
-	} else {
-		text.Draw(screen, "Create Lobby", g.font, screenWidth/2-30, createLobbyYPos, color.White)
-	}
-
+	// Dibujar "Back" como última opción
+	yPos += fontSize + 10
 	if g.lobbyMenuSelection == len(g.lobbies)+1 { // Selección en "Back"
-		text.Draw(screen, "> Back", g.font, screenWidth/2-60, backYPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
+		text.Draw(screen, "> Back", g.font, screenWidth/2-60, yPos, color.RGBA{R: 255, G: 100, B: 100, A: 255})
 	} else {
-		text.Draw(screen, "Back", g.font, screenWidth/2-30, backYPos, color.White)
+		text.Draw(screen, "Back", g.font, screenWidth/2-30, yPos, color.White)
 	}
 }
 
@@ -138,7 +139,7 @@ func (g *Game) updateLobbyMenu() {
 		return
 	}
 
-	totalOptions := len(g.lobbies) + 2 // Lobbies dinámicos + "Create Lobby" + "Back"
+	totalOptions := len(g.lobbies) + 2 // Total: "Create Lobby", lobbies dinámicos, "Back"
 
 	// Navegación en el menú de lobbies
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
@@ -149,22 +150,35 @@ func (g *Game) updateLobbyMenu() {
 		g.lobbyMenuSelection = (g.lobbyMenuSelection + 1) % totalOptions
 		g.lastInputTime = time.Now()
 	}
-	log.Print(g.lobbyMenuSelection)
+
+	log.Printf("Selección actual: %d", g.lobbyMenuSelection)
+
 	// Selección de opciones
+	log.Printf("Índice seleccionado: %d, Lobbies: %+v\n", g.lobbyMenuSelection, g.lobbies)
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-		switch {
-		case g.lobbyMenuSelection == 0: // Crear un lobby
+		switch g.lobbyMenuSelection {
+		case 0: // Crear un lobby
+			log.Println("Creando un nuevo lobby...")
 			g.createLobby("My Awesome Lobby")
 			g.state = LobbyIn
 			g.stateChangeTime = time.Now()
-		case g.lobbyMenuSelection == len(g.lobbies)+1: // Volver al menú principal
+
+		case len(g.lobbies) + 1: // Volver al menú principal
+			log.Println("Volviendo al menú principal...")
 			g.state = Menu
 			g.stateChangeTime = time.Now()
+
 		default: // Unirse a un lobby existente
-			selectedLobby := g.lobbies[g.lobbyMenuSelection-1] // Ajusta selección dinámica
-			g.joinLobby(selectedLobby.ID)
-			g.state = LobbyIn
-			g.stateChangeTime = time.Now()
+			// Asegúrate de validar si hay lobbies disponibles
+			if len(g.lobbies) > 0 {
+				selectedLobby := g.lobbies[g.lobbyMenuSelection-1] // Resta 1 para ajustar el índice
+				log.Printf("Uniéndose al lobby: %s\n", selectedLobby.Name)
+				g.joinLobby(selectedLobby.ID)
+				g.state = LobbyIn
+				g.stateChangeTime = time.Now()
+			} else {
+				log.Println("No hay lobbies disponibles para unirse.")
+			}
 		}
 	}
 }
