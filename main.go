@@ -1,5 +1,8 @@
 package main
 
+// PENDIENTES:
+// REVISAR QUE SE PUEDA CORRER JUEGO SERVIDOR ESTA CAIDO
+// REVISAR UN BUEN DEBOUCE DE BOTONES
 import (
 	"log"
 
@@ -14,6 +17,7 @@ func main() {
 	// Hacer que la ventana sea resizable y a pantalla completa
 	// ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	// ebiten.SetFullscreen(false) // Cambia a true si quieres comenzar en pantalla completa
+	// CREAR ESTRUCTURA PARA MEESAGE SEND
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Pong Game with Custom Font")
