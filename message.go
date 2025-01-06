@@ -54,6 +54,7 @@ func (g *Game) HandleServerMessage(msg Message) {
 
 	case "lobby_joined":
 		log.Printf("Unido al lobby: %s\n", msg.LobbyID)
+		g.currentLobbyID = msg.LobbyID // Actualiza el ID del lobby actual
 		g.state = LobbyIn
 	case "player_joined":
 		log.Printf("Nuevo jugador conectado: %s\n", msg.PlayerID)
