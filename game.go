@@ -26,24 +26,30 @@ const (
 	Menu      GameState = iota
 	LobbyMenu           // Menú para ver o crear lobbies
 	Playing
-	Lobby
+	LobbyIn
 )
 
 type Game struct {
-	state         GameState
-	menuSelection int
-	lastInputTime time.Time
-	font          font.Face
-	player1Y      float64
-	playerID      string
-	client        *Client
-	player2Y      float64
-	player1X      float64
-	player2X      float64
-	ballX         float64
-	ballY         float64
-	ballDirection Vector
-	lastHitPaddle bool
+	state              GameState
+	menuSelection      int       // Para el menú principal
+	lobbyMenuSelection int       // Para el menú de lobbies
+	stateChangeTime    time.Time // Marca cuándo se cambió el estado
+	lastInputTime      time.Time
+	font               font.Face
+	player1Y           float64
+	playerID           string
+	client             *Client
+	player2Y           float64
+	player1X           float64
+	player2X           float64
+	ballX              float64
+	ballY              float64
+	ballDirection      Vector
+	lastHitPaddle      bool
+	lobbies            []Lobby
+	selectedLobby      int
+	currentLobbyID     string   // Almacena el ID del lobby actual
+	lobbyPlayers       []string // Lista de jugadores en el lobby actual
 }
 
 func generatePlayerID() string {
@@ -63,7 +69,10 @@ func NewGame() *Game {
 	fontFace := loadFont() // Asume que tienes una función `loadFont()` en `assets.go`
 	pID := generatePlayerID()
 	fmt.Printf("Generated Player ID: %s\n", pID)
-	return &Game{
+
+	client := NewClient("ws://172.17.0.1:8088/ws") // Conexión WebSocket
+
+	game := &Game{
 		state:         Menu,
 		menuSelection: 0,
 		lastInputTime: time.Now(),
@@ -71,11 +80,16 @@ func NewGame() *Game {
 		player1X:      20,
 		player2X:      screenWidth - 30,
 		playerID:      pID,
-		client:        NewClient("ws://172.17.0.1:8088/ws"),
+		client:        client,
 		ballX:         screenWidth / 2,
 		ballY:         screenHeight / 2,
 		ballDirection: Vector{X: 1, Y: 1},
 	}
+
+	// Escuchar mensajes del servidor en segundo plano
+	go client.Listen(game.HandleServerMessage)
+
+	return game
 }
 
 func (g *Game) updateGame() {
@@ -92,8 +106,8 @@ func (g *Game) Update() error {
 		g.updateMenu()
 	case LobbyMenu:
 		g.updateLobbyMenu()
-	// case Lobby:                  ///REVISAR
-	// 	g.updateLobby()
+	case LobbyIn:
+		g.updateLobby()
 	case Playing:
 		g.updateGame()
 	}
@@ -103,7 +117,7 @@ func (g *Game) Update() error {
 // Draw renderiza la pantalla del juego según el estado actual.
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.Black) // Fondo negro para el juego
-
+	//log.Printf("Estado actual: %v\n", g.state, g.menuSelection, g.lobbyMenuSelection, g.lobbies)
 	switch g.state {
 	case Menu:
 		g.drawMenu(screen)
@@ -111,7 +125,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawGame(screen)
 	case LobbyMenu:
 		g.drawLobbyMenu(screen)
-	case Lobby:
+	case LobbyIn:
 		g.drawLobby(screen)
 	}
 }
