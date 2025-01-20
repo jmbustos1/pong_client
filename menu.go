@@ -151,7 +151,7 @@ func (g *Game) updateLobbyMenu() {
 		g.lastInputTime = time.Now()
 	}
 
-	log.Printf("Selección actual: %d", g.lobbyMenuSelection)
+	log.Printf("Selección actual: %d", g.lobbyMenuSelection, g.lobbies)
 
 	// Selección de opciones
 	log.Printf("Índice seleccionado: %d, Lobbies: %+v\n", g.lobbyMenuSelection, g.lobbies)
@@ -210,6 +210,7 @@ func (g *Game) updateLobby() {
 			})
 			log.Println("Intentando iniciar el juego...")
 		case 1: // Back
+			g.leaveLobby()
 			g.state = LobbyMenu
 			g.lastInputTime = time.Now() // Prevenir rebotes al volver al LobbyMenu
 		}
