@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"image/color"
+	"log"
 	"os"
 	"time"
 
@@ -50,6 +51,7 @@ type Game struct {
 	selectedLobby      int
 	currentLobbyID     string   // Almacena el ID del lobby actual
 	lobbyPlayers       []string // Lista de jugadores en el lobby actual
+	serverError        string
 }
 
 func generatePlayerID() string {
@@ -70,8 +72,11 @@ func NewGame() *Game {
 	pID := generatePlayerID()
 	fmt.Printf("Generated Player ID: %s\n", pID)
 
-	client := NewClient("ws://172.17.0.1:8088/ws") // Conexión WebSocket
-
+	client, err := NewClient("ws://172.17.0.1:8088/ws")
+	if err != nil {
+		log.Println("No se pudo conectar al servidor:", err)
+		client = nil // Permitir que el juego continúe sin servidor
+	}
 	game := &Game{
 		state:         Menu,
 		menuSelection: 0,
@@ -85,10 +90,16 @@ func NewGame() *Game {
 		ballY:         screenHeight / 2,
 		ballDirection: Vector{X: 1, Y: 1},
 	}
-
-	// Escuchar mensajes del servidor en segundo plano
-	go client.Listen(game.HandleServerMessage)
-
+	// Define el comportamiento al perder la conexión
+	onDisconnect := func() {
+		log.Println("Servidor caído. Volviendo al menú principal...")
+		game.state = Menu
+		game.serverError = "Servidor desconectado"
+	}
+	// Escuchar mensajes si hay conexión
+	if client != nil {
+		go client.Listen(game.HandleServerMessage, onDisconnect)
+	}
 	return game
 }
 
@@ -101,6 +112,7 @@ func (g *Game) updateGame() {
 }
 
 func (g *Game) Update() error {
+	g.ProcessIncomingMessages()
 	switch g.state {
 	case Menu:
 		g.updateMenu()
